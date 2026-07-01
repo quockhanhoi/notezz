@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="Note · Ghi chú nhanh" />
+<meta property="og:description" content="Ghi chú tức thời, không cần đăng nhập" />
+<title>Note · Danh sách</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF3F0;--surface:#FFFFFF;--ink:#3A2A2E;--muted:#9C8388;
+    --accent:#E2657B;--accent-soft:#F6D9DF;--line:#EFD9DD;--del:#E2657B;
+    --shadow:0 18px 40px -20px rgba(58,42,46,.3);
+  }
+  html[data-theme="blue"]{
+    --bg:#EEF3F8;--surface:#FFFFFF;--ink:#1F2D3D;--muted:#7D93A8;
+    --accent:#3B6FA0;--accent-soft:#D6E4F0;--line:#DCE6EF;--del:#E06070;
+    --shadow:0 18px 40px -20px rgba(31,45,61,.3);
+  }
+  html[data-theme="black"]{
+    --bg:#15151A;--surface:#1D1D24;--ink:#ECE9E6;--muted:#7A7A85;
+    --accent:#E0B454;--accent-soft:#2C2A22;--line:#2B2B33;--del:#E06070;
+    --shadow:0 18px 40px -20px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;
+    transition:background .35s,color .35s;
+  }
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 24px;gap:12px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:8px;}
+  .brand h1{font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+  .brand span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .themes{display:flex;gap:6px;padding:5px;background:var(--surface);border-radius:99px;box-shadow:var(--shadow);}
+  .themes button{
+    width:20px;height:20px;border-radius:50%;border:2px solid transparent;
+    cursor:pointer;padding:0;transition:transform .15s,border-color .15s;
+  }
+  .themes button:hover{transform:scale(1.15);}
+  .themes button[data-t="pink"]{background:#E2657B;}
+  .themes button[data-t="blue"]{background:#3B6FA0;}
+  .themes button[data-t="black"]{background:#15151A;border-color:#3a3a42;}
+  .themes button.active{border-color:var(--ink);}
+  .new-btn{
+    display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;
+    padding:9px 18px;border-radius:99px;transition:filter .15s,transform .15s;
+  }
+  .new-btn:hover{filter:brightness(1.07);transform:translateY(-1px);}
+
+  main{flex:1;padding:0 24px 32px;max-width:700px;width:100%;margin:0 auto;}
+  .section-title{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+    letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px;
+  }
+  #noteList{display:flex;flex-direction:column;gap:8px;}
+
+  .note-item{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;display:flex;align-items:center;gap:12px;
+    box-shadow:var(--shadow);transition:border-color .15s,transform .12s;
+    text-decoration:none;color:inherit;
+  }
+  .note-item:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .note-dot{
+    width:8px;height:8px;border-radius:50%;flex-shrink:0;
+    background:var(--accent-soft);border:2px solid var(--accent);
+  }
+  .note-body{flex:1;min-width:0;}
+  .note-preview{
+    font-size:14px;font-weight:500;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;
+  }
+  .note-meta{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    color:var(--muted);margin-top:3px;display:flex;gap:10px;
+  }
+  .del-btn{
+    flex-shrink:0;background:none;border:1px solid transparent;cursor:pointer;
+    color:var(--muted);padding:6px 8px;border-radius:8px;font-size:13px;
+    transition:color .15s,border-color .15s,background .15s;
+  }
+  .del-btn:hover{color:var(--del);border-color:var(--del);background:color-mix(in srgb,var(--del) 8%,transparent);}
+
+  .empty{
+    text-align:center;padding:56px 20px;color:var(--muted);
+    font-size:14px;line-height:1.8;
+  }
+  .empty strong{display:block;font-family:'Fraunces',serif;font-size:20px;color:var(--muted);margin-bottom:6px;}
+
+  .skeleton{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;box-shadow:var(--shadow);overflow:hidden;position:relative;
+  }
+  .skeleton::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--accent-soft) 60%,transparent) 50%,transparent 100%);
+    animation:shimmer 1.2s infinite;
+  }
+  @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  .sk-line{height:12px;border-radius:4px;background:var(--accent-soft);}
+  .sk-line+.sk-line{margin-top:7px;width:55%;}
+
+  /* modal xác nhận xóa */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);
+    align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(3px);
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:28px 30px;max-width:340px;width:90%;box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .modal h2{font-family:'Fraunces',serif;font-size:19px;margin-bottom:8px;}
+  .modal p{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
+  .modal-btns{display:flex;gap:10px;justify-content:center;}
+  .modal-btns button{
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;
+    padding:9px 20px;border-radius:99px;cursor:pointer;transition:filter .15s;
+  }
+  .modal-btns button:hover{filter:brightness(1.08);}
+  #cancelBtn{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  #confirmBtn{background:var(--del);color:#fff;border:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Note</h1>
+    <span id="noteCount"></span>
+  </div>
+  <div class="header-right">
+    <div class="themes" id="themes">
+      <button data-t="pink" title="Hồng"></button>
+      <button data-t="blue" title="Xanh"></button>
+      <button data-t="black" title="Đen"></button>
+    </div>
+    <a class="new-btn" href="/note/:UUID">+ Ghi chú mới</a>
+  </div>
+</header>
+
+<main>
+  <p class="section-title">Ghi chú gần đây</p>
+  <div id="noteList">
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Xóa ghi chú?</h2>
+    <p>Hành động này không thể hoàn tác. Ghi chú sẽ bị xóa vĩnh viễn.</p>
+    <div class="modal-btns">
+      <button id="cancelBtn">Hủy</button>
+      <button id="confirmBtn">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Theme
+(function(){
+  const saved = localStorage.getItem('note-theme') || 'pink';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.querySelectorAll('#themes button').forEach(b => {
+    if (b.dataset.t === saved) b.classList.add('active');
+    b.addEventListener('click', () => {
+      document.documentElement.setAttribute('data-theme', b.dataset.t);
+      localStorage.setItem('note-theme', b.dataset.t);
+      document.querySelectorAll('#themes button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+})();
+
+function formatTime(ms) {
+  const diff = Date.now() - ms;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (m < 1) return 'vừa xong';
+  if (m < 60) return m + ' phút trước';
+  if (h < 24) return h + ' giờ trước';
+  return d + ' ngày trước';
+}
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  return (bytes / 1024).toFixed(1) + ' KB';
+}
+
+let pendingUUID = null;
+const overlay = document.getElementById('overlay');
+const cancelBtn = document.getElementById('cancelBtn');
+const confirmBtn = document.getElementById('confirmBtn');
+
+cancelBtn.addEventListener('click', () => { overlay.classList.remove('show'); pendingUUID = null; });
+overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.classList.remove('show'); pendingUUID = null; } });
+
+confirmBtn.addEventListener('click', async () => {
+  if (!pendingUUID) return;
+  const uuid = pendingUUID;
+  pendingUUID = null;
+  overlay.classList.remove('show');
+  const item = document.querySelector(`[data-uuid="${uuid}"]`);
+  if (item) { item.style.opacity = '0.4'; item.style.pointerEvents = 'none'; }
+  await fetch('/note/' + uuid, { method: 'DELETE' });
+  loadNotes();
+});
+
+async function loadNotes() {
+  const list = document.getElementById('noteList');
+  const res = await fetch('/notes');
+  const notes = await res.json();
+  const count = document.getElementById('noteCount');
+
+  if (notes.length === 0) {
+    list.innerHTML = '<div class="empty"><strong>Chưa có ghi chú nào</strong>Nhấn "+ Ghi chú mới" để bắt đầu.</div>';
+    count.textContent = '';
+    return;
+  }
+
+  count.textContent = notes.length + ' ghi chú';
+  list.innerHTML = notes.map(n => `
+    <div class="note-item" data-uuid="${n.uuid}" style="cursor:default;">
+      <div class="note-dot"></div>
+      <div class="note-body">
+        <div class="note-preview">${n.preview.replace(/</g,'&lt;')}</div>
+        <div class="note-meta">
+          <span>${formatTime(n.updatedAt)}</span>
+          <span>${formatSize(n.size)}</span>
+          <span style="font-family:monospace;font-size:10px;opacity:.7;">#${n.uuid.slice(0,8)}</span>
+        </div>
+      </div>
+      <button class="del-btn" data-uuid="${n.uuid}" title="Xóa ghi chú">✕</button>
+      <a href="/note/${n.uuid}" style="display:none"></a>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.note-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (e.target.closest('.del-btn')) return;
+      window.location.href = '/note/' + item.dataset.uuid;
+    });
+    item.style.cursor = 'pointer';
+  });
+
+  list.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      pendingUUID = btn.dataset.uuid;
+      overlay.classList.add('show');
+    });
+  });
+}
+
+loadNotes();
+</script>
+</body>
+</html>
