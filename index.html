@@ -51,7 +51,7 @@
   .new-btn{
     display:inline-flex;align-items:center;gap:6px;text-decoration:none;
     background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;
-    padding:9px 18px;border-radius:99px;transition:filter .15s,transform .15s;
+    padding:9px 18px;border-radius:99px;transition:filter .15s,transform .15s;white-space:nowrap;
   }
   .new-btn:hover{filter:brightness(1.07);transform:translateY(-1px);}
 
@@ -66,7 +66,7 @@
     background:var(--surface);border:1px solid var(--line);border-radius:14px;
     padding:14px 16px;display:flex;align-items:center;gap:12px;
     box-shadow:var(--shadow);transition:border-color .15s,transform .12s;
-    text-decoration:none;color:inherit;
+    cursor:pointer;
   }
   .note-item:hover{border-color:var(--accent);transform:translateY(-1px);}
   .note-dot{
@@ -80,20 +80,20 @@
   }
   .note-meta{
     font-family:'JetBrains Mono',monospace;font-size:10.5px;
-    color:var(--muted);margin-top:3px;display:flex;gap:10px;
+    color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;
   }
   .del-btn{
     flex-shrink:0;background:none;border:1px solid transparent;cursor:pointer;
-    color:var(--muted);padding:6px 8px;border-radius:8px;font-size:13px;
+    color:var(--muted);padding:6px 9px;border-radius:8px;font-size:14px;line-height:1;
     transition:color .15s,border-color .15s,background .15s;
   }
-  .del-btn:hover{color:var(--del);border-color:var(--del);background:color-mix(in srgb,var(--del) 8%,transparent);}
+  .del-btn:hover{color:var(--del);border-color:var(--del);background:rgba(226,101,123,.08);}
 
   .empty{
     text-align:center;padding:56px 20px;color:var(--muted);
     font-size:14px;line-height:1.8;
   }
-  .empty strong{display:block;font-family:'Fraunces',serif;font-size:20px;color:var(--muted);margin-bottom:6px;}
+  .empty strong{display:block;font-family:'Fraunces',serif;font-size:20px;color:var(--ink);margin-bottom:6px;}
 
   .skeleton{
     background:var(--surface);border:1px solid var(--line);border-radius:14px;
@@ -101,14 +101,14 @@
   }
   .skeleton::after{
     content:'';position:absolute;inset:0;
-    background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--accent-soft) 60%,transparent) 50%,transparent 100%);
+    background:linear-gradient(90deg,transparent 0%,rgba(226,101,123,.12) 50%,transparent 100%);
     animation:shimmer 1.2s infinite;
   }
   @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
-  .sk-line{height:12px;border-radius:4px;background:var(--accent-soft);}
-  .sk-line+.sk-line{margin-top:7px;width:55%;}
+  .sk-line{height:12px;border-radius:4px;background:var(--accent-soft);margin-bottom:8px;}
+  .sk-line.short{width:45%;}
 
-  /* modal xác nhận xóa */
+  /* modal */
   .overlay{
     display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);
     align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(3px);
@@ -116,17 +116,15 @@
   .overlay.show{display:flex;}
   .modal{
     background:var(--surface);border:1px solid var(--line);border-radius:18px;
-    padding:28px 30px;max-width:340px;width:90%;box-shadow:var(--shadow);
-    text-align:center;
+    padding:28px 30px;max-width:320px;width:90%;box-shadow:var(--shadow);text-align:center;
   }
   .modal h2{font-family:'Fraunces',serif;font-size:19px;margin-bottom:8px;}
-  .modal p{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
+  .modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
   .modal-btns{display:flex;gap:10px;justify-content:center;}
   .modal-btns button{
     font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;
-    padding:9px 20px;border-radius:99px;cursor:pointer;transition:filter .15s;
+    padding:9px 22px;border-radius:99px;cursor:pointer;transition:filter .15s;
   }
-  .modal-btns button:hover{filter:brightness(1.08);}
   #cancelBtn{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
   #confirmBtn{background:var(--del);color:#fff;border:none;}
 </style>
@@ -150,9 +148,9 @@
 <main>
   <p class="section-title">Ghi chú gần đây</p>
   <div id="noteList">
-    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
-    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
-    <div class="skeleton"><div class="sk-line"></div><div class="sk-line"></div></div>
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line short"></div></div>
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line short"></div></div>
+    <div class="skeleton"><div class="sk-line"></div><div class="sk-line short"></div></div>
   </div>
 </main>
 
@@ -170,10 +168,10 @@
 <script>
 // Theme
 (function(){
-  const saved = localStorage.getItem('note-theme') || 'pink';
-  document.documentElement.setAttribute('data-theme', saved);
+  const t = localStorage.getItem('note-theme') || 'pink';
+  document.documentElement.setAttribute('data-theme', t);
   document.querySelectorAll('#themes button').forEach(b => {
-    if (b.dataset.t === saved) b.classList.add('active');
+    if (b.dataset.t === t) b.classList.add('active');
     b.addEventListener('click', () => {
       document.documentElement.setAttribute('data-theme', b.dataset.t);
       localStorage.setItem('note-theme', b.dataset.t);
@@ -183,84 +181,93 @@
   });
 })();
 
-function formatTime(ms) {
+function timeAgo(ms) {
   const diff = Date.now() - ms;
   const m = Math.floor(diff / 60000);
-  const h = Math.floor(diff / 3600000);
-  const d = Math.floor(diff / 86400000);
   if (m < 1) return 'vừa xong';
   if (m < 60) return m + ' phút trước';
+  const h = Math.floor(diff / 3600000);
   if (h < 24) return h + ' giờ trước';
-  return d + ' ngày trước';
+  return Math.floor(diff / 86400000) + ' ngày trước';
 }
-function formatSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  return (bytes / 1024).toFixed(1) + ' KB';
+function fmtSize(b) {
+  if (!b) return '';
+  return b < 1024 ? b + ' B' : (b/1024).toFixed(1) + ' KB';
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 let pendingUUID = null;
 const overlay = document.getElementById('overlay');
-const cancelBtn = document.getElementById('cancelBtn');
-const confirmBtn = document.getElementById('confirmBtn');
-
-cancelBtn.addEventListener('click', () => { overlay.classList.remove('show'); pendingUUID = null; });
+document.getElementById('cancelBtn').addEventListener('click', () => { overlay.classList.remove('show'); pendingUUID = null; });
 overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.classList.remove('show'); pendingUUID = null; } });
-
-confirmBtn.addEventListener('click', async () => {
+document.getElementById('confirmBtn').addEventListener('click', async () => {
   if (!pendingUUID) return;
   const uuid = pendingUUID;
   pendingUUID = null;
   overlay.classList.remove('show');
-  const item = document.querySelector(`[data-uuid="${uuid}"]`);
-  if (item) { item.style.opacity = '0.4'; item.style.pointerEvents = 'none'; }
-  await fetch('/note/' + uuid, { method: 'DELETE' });
+  const el = document.querySelector('.note-item[data-uuid="' + uuid + '"]');
+  if (el) el.style.opacity = '0.3';
+  try {
+    await fetch('/note/' + uuid, { method: 'DELETE' });
+  } catch(e) {}
   loadNotes();
 });
 
-async function loadNotes() {
+function renderNotes(notes) {
   const list = document.getElementById('noteList');
-  const res = await fetch('/notes');
-  const notes = await res.json();
   const count = document.getElementById('noteCount');
 
-  if (notes.length === 0) {
-    list.innerHTML = '<div class="empty"><strong>Chưa có ghi chú nào</strong>Nhấn "+ Ghi chú mới" để bắt đầu.</div>';
+  if (!notes || notes.length === 0) {
     count.textContent = '';
+    list.innerHTML = '<div class="empty"><strong>Chưa có ghi chú nào</strong>Nhấn "+ Ghi chú mới" để bắt đầu.</div>';
     return;
   }
 
   count.textContent = notes.length + ' ghi chú';
-  list.innerHTML = notes.map(n => `
-    <div class="note-item" data-uuid="${n.uuid}" style="cursor:default;">
-      <div class="note-dot"></div>
-      <div class="note-body">
-        <div class="note-preview">${n.preview.replace(/</g,'&lt;')}</div>
-        <div class="note-meta">
-          <span>${formatTime(n.updatedAt)}</span>
-          <span>${formatSize(n.size)}</span>
-          <span style="font-family:monospace;font-size:10px;opacity:.7;">#${n.uuid.slice(0,8)}</span>
-        </div>
-      </div>
-      <button class="del-btn" data-uuid="${n.uuid}" title="Xóa ghi chú">✕</button>
-      <a href="/note/${n.uuid}" style="display:none"></a>
-    </div>
-  `).join('');
 
-  list.querySelectorAll('.note-item').forEach(item => {
-    item.addEventListener('click', e => {
+  const html = notes.map(function(n) {
+    const uuid = n.uuid || n.id || '';
+    const preview = esc(n.preview || '(trống)');
+    const meta = [timeAgo(n.updatedAt || 0), fmtSize(n.size || n.length || 0), '<span style="opacity:.6">#' + esc(uuid.slice(0,8)) + '</span>'].filter(Boolean).join('<span style="opacity:.35"> · </span>');
+    return '<div class="note-item" data-uuid="' + esc(uuid) + '">'
+      + '<div class="note-dot"></div>'
+      + '<div class="note-body">'
+      + '<div class="note-preview">' + preview + '</div>'
+      + '<div class="note-meta">' + meta + '</div>'
+      + '</div>'
+      + '<button class="del-btn" data-uuid="' + esc(uuid) + '" title="Xóa">✕</button>'
+      + '</div>';
+  }).join('');
+
+  list.innerHTML = html;
+
+  list.querySelectorAll('.note-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
       if (e.target.closest('.del-btn')) return;
       window.location.href = '/note/' + item.dataset.uuid;
     });
-    item.style.cursor = 'pointer';
   });
-
-  list.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
+  list.querySelectorAll('.del-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
       e.stopPropagation();
       pendingUUID = btn.dataset.uuid;
       overlay.classList.add('show');
     });
   });
+}
+
+async function loadNotes() {
+  try {
+    const res = await fetch('/notes');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const notes = await res.json();
+    renderNotes(notes);
+  } catch(err) {
+    document.getElementById('noteList').innerHTML =
+      '<div class="empty"><strong>Không tải được danh sách</strong>' + err.message + '</div>';
+  }
 }
 
 loadNotes();
