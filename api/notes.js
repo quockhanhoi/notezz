@@ -14,7 +14,8 @@ module.exports = {
             if (!fs.existsSync(notesDir)) return res.json([]);
 
             const files = fs.readdirSync(notesDir)
-                .filter(f => f.endsWith('.txt') && !f.endsWith('.raw.txt'));
+                .filter(f => f.endsWith('.txt') && !f.endsWith('.raw.txt'))
+;
 
             const notes = files.map(file => {
                 const uuid = file.replace(/\.txt$/, '');
